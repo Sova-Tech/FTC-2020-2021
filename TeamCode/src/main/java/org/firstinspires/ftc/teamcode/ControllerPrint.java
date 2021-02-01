@@ -35,26 +35,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
- // i am once again asking for tour assistanc
 
-/**
- * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
- * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
- * of the FTC Driver Station. When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all linear OpModes contain.
- *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
-
-
-
-@TeleOp(name="LinearPrintTime", group="Linear Opmode")
-//@Disabled
-public class LinearPrintTime extends LinearOpMode {
+@TeleOp(name="ControllerPrint", group="Linear Opmode")
+@Disabled
+public class ControllerPrint extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -71,10 +55,28 @@ public class LinearPrintTime extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            // Tank Mode uses one stick to control each wheel.
-            // - This requires no math, but it is hard to drive forward slowly and keep straight.
-            // leftPower  = -gamepad1.left_stick_y ;
-            // rightPower = -gamepad1.right_stick_y ;
+            // Setup a variable for each drive wheel to save power level for telemetry
+            double leftStickX, leftStickY;
+            double rightStickX, rightStickY;
+            boolean triangle,square;
+
+            leftStickX = gamepad1.left_stick_x;
+            leftStickY = gamepad1.left_stick_y;
+            rightStickX = gamepad1.right_stick_x;
+            rightStickY = gamepad1.right_stick_y;
+            triangle = gamepad1.triangle;
+            square = gamepad1.square;
+
+            telemetry.addData("leftStickX = ", leftStickX);
+            telemetry.addLine();
+            telemetry.addData("leftStickY = ", leftStickY);
+
+            /*
+            telemetry.addLine();
+            telemetry.addData("triangle = ", triangle);
+            telemetry.addLine();
+            telemetry.addData("square = ", square);
+            */
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
