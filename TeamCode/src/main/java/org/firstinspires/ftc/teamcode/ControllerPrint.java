@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -37,7 +38,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @TeleOp(name="ControllerPrint", group="Linear Opmode")
-@Disabled
+//@Disabled
 public class ControllerPrint extends LinearOpMode {
 
     // Declare OpMode members.
@@ -58,7 +59,7 @@ public class ControllerPrint extends LinearOpMode {
             // Setup a variable for each drive wheel to save power level for telemetry
             double leftStickX, leftStickY;
             double rightStickX, rightStickY;
-            boolean triangle,square;
+            boolean triangle,square, circle, cross;
 
             leftStickX = gamepad1.left_stick_x;
             leftStickY = gamepad1.left_stick_y;
@@ -66,17 +67,23 @@ public class ControllerPrint extends LinearOpMode {
             rightStickY = gamepad1.right_stick_y;
             triangle = gamepad1.triangle;
             square = gamepad1.square;
+            circle = gamepad1.circle;
+            cross = gamepad1.cross;
+
 
             telemetry.addData("leftStickX = ", leftStickX);
-            telemetry.addLine();
             telemetry.addData("leftStickY = ", leftStickY);
+            telemetry.addLine();
+            telemetry.addData("rightStick x = ", rightStickX);
+            telemetry.addData("rightStick y = ", rightStickY);
 
-            /*
             telemetry.addLine();
             telemetry.addData("triangle = ", triangle);
-            telemetry.addLine();
             telemetry.addData("square = ", square);
-            */
+            telemetry.addData("circle = ", circle);
+            telemetry.addData("cross = ", cross);
+
+
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
