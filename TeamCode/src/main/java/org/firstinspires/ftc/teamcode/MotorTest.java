@@ -29,33 +29,35 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 
-@TeleOp(name="sugemPulaToti", group="Linear Opmode")
+@TeleOp(name="DriveIntake", group="Linear Opmode")
 //@Disabled
 public class MotorTest extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor motor0 = null;
-    private DcMotor motor1 = null;
+    private DcMotor driveMotorR = null;
+    private DcMotor driveMotorL = null;
+    private DcMotor intakeMotor = null;
+    private boolean isIntakeOn = false;
 
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
-        motor0  = hardwareMap.get(DcMotor.class, "motorTest");
-        motor1 = hardwareMap.get(DcMotor.class, "motorTest1");
+        driveMotorR = hardwareMap.get(DcMotor.class, "driveMotorR");
+        driveMotorL = hardwareMap.get(DcMotor.class, "driveMotorL");
+        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
 
-        motor0.setDirection(DcMotor.Direction.FORWARD);
-        motor1.setDirection(DcMotor.Direction.REVERSE);
+        driveMotorR.setDirection(DcMotor.Direction.FORWARD);
+        driveMotorL.setDirection(DcMotor.Direction.REVERSE);
+        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -65,15 +67,27 @@ public class MotorTest extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Setup a variable for each drive wheel to save power level for telemetry
-            double power0;
-            double power1;
+            double powerDriveR;
+            double powerDriveL;
+            double intakePower;
 
-            power0 = -gamepad1.left_stick_y ;
-            power1 = -gamepad1.right_stick_y;
+            powerDriveR = -gamepad1.right_stick_y % 0.6;
+            powerDriveL = -gamepad1.left_stick_y % 0.6;
+
+            if(gamepad1.cross)
+                isIntakeOn = !isIntakeOn;
+
+            if(isIntakeOn)
+                intakePower = 0.5;
+            else
+                intakePower = 0;
 
             // Send calculated power to wheels
-            motor0.setPower(power0);
-            motor1.setPower(power1);
+            driveMotorR.setPower(powerDriveR);
+            driveMotorL.setPower(powerDriveL);
+
+
+            intakeMotor.setPower(intakePower);
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.update();
