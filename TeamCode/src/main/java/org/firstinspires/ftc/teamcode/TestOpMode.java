@@ -35,22 +35,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 
-@TeleOp(name="RobotFull1", group="Linear Opmode")
+@TeleOp(name="tetopmode", group="Linear Opmode")
 //@Disabled
-public class RobotFull1 extends LinearOpMode {
-
-    /*
-        right stick = forward;
-        left stick = right
-        cross = intake; (toggle)
-        left bumper = conveyor
-        right bumper = conveyor + shooter;
-        right arrow = shooter motor;
-      need to add all buttons;
-     */
+public class TestOpMode extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -97,77 +86,13 @@ public class RobotFull1 extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        boolean isWobbleOn = false;
-
         while (opModeIsActive()) {
 
-            //driver
-            //Movement + Turn
-            double drive = 2 * java.lang.Math.asin(-gamepad1.left_stick_y) / Math.PI; //gamepad1.left_stick_y; //accel
-            double turn = 2 * java.lang.Math.asin(-gamepad1.right_stick_x) / Math.PI; //gamepad1.left_stick_y; //accel
-            powerDriveR = Range.clip(drive + turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic);
-            powerDriveL = Range.clip(drive - turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic);
+            intakeMotor.setPower(0.9);
+            sleep(1000);
 
-            driveMotorR.setPower(powerDriveR);
-            driveMotorL.setPower(powerDriveL);
-
-            //Wobble
-            //Claw
-            int wobbleToggle = 1;
-            if (gamepad1.right_bumper) {
-                wobbleServo.setPosition(0.3 * Math.pow(1, wobbleToggle));
-            }
-
-            if(gamepad1.right_bumper){
-                if(isWobbleOn)
-                {
-                    wobbleServo.setPosition(0.3);
-                    isWobbleOn = false;
-                    sleep(500);
-                }
-                else
-                {
-                    wobbleServo.setPosition(0.0);
-                    isWobbleOn = true;
-                    sleep(500);
-                }
-            }
-
-            //Arm
-            if (gamepad1.left_trigger > 0) //e la alegerea voastra daca sa fie cele doua triggere sau trigger/bumper ul din stanga
-                wobbleMotor.setPower(0.5); //recomand ca l2 ul sa ul ridice //voi stiti directia motorului
-            else if (gamepad1.right_trigger > 0) {
-                wobbleMotor.setPower(-0.5);
-            } else
-                wobbleMotor.setPower(0);
-
-
-            //Shooter
-            //intake
-            if (gamepad2.dpad_right)
-                intakeMotor.setPower(0.9);
-            else if (gamepad2.dpad_left) {
-                intakeMotor.setPower(-0.9);
-            } else
-                intakeMotor.setPower(0);
-            /*sleep(500)*/ //?
-
-            //server
-            if (gamepad2.right_bumper)
-                conveyorMotor.setPower(1.0);
-            else if (gamepad2.left_bumper)
-                conveyorMotor.setPower(-1.0);
-            else
-                conveyorMotor.setPower(0);
-
-            //launcher
-            //shooterMotor.setVelocity(gamepad1.right_stick_y*3600);   //idk what specs our motor has, so better for u to adjust it //id suggest adding a constant to it for more precision, perhaps with an if then for the stick == 0 case
-            if (-gamepad2.right_stick_y == 0)
-                shooterMotor.setPower(0);   //perhaps with some accelerationshooterMotor.setPower(gamepad2.right_stick_y)   //perhaps with some acceleration
-            else if (-gamepad2.right_stick_y > 0)
-                shooterMotor.setPower(2 * java.lang.Math.asin(-gamepad2.right_stick_y) / Math.PI * 0.2 * 3  + 0.2 * 2);
-            else
-                shooterMotor.setPower(2 * java.lang.Math.asin(-gamepad2.right_stick_y) / Math.PI);
+            telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.update();
         }
     }
 }
