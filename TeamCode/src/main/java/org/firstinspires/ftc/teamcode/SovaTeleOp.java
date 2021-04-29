@@ -38,16 +38,16 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 
-@TeleOp(name="RobotFull1", group="Linear Opmode")
+@TeleOp(name="SovaTeleOP", group="Linear Opmode")
 //@Disabled
-public class RobotFull1 extends LinearOpMode {
+public class SovaTeleOp extends LinearOpMode {
 
     /*
         right stick = forward;
         left stick = right
         cross = intake; (toggle)
-        left bumper = conveyor
-        right bumper = conveyor + shooter;
+        left bumper = conveyour
+        right bumper = conveyour + shooter;
         right arrow = shooter motor;
       need to add all buttons;
      */
@@ -63,8 +63,8 @@ public class RobotFull1 extends LinearOpMode {
     Servo wobbleServo;
 
     private boolean isIntakeOn = false;
-    private double dirveMotorSpeedBasic = 0.85;
-    private boolean isWobbleOff = false;
+    private double driveMotorSpeedBasic = 1;
+    private boolean isWobbleOff = true;
     double powerDriveR;
     double powerDriveL;
     double intakePower;
@@ -74,7 +74,7 @@ public class RobotFull1 extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
-        //region Declarare Motoare--------------------------------------------------------------------
+        //Declare Motors----------------------------------------------------------------------------
         driveMotorR = hardwareMap.get(DcMotor.class, "driveMotorR");
         driveMotorL = hardwareMap.get(DcMotor.class, "driveMotorL");
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
@@ -83,6 +83,7 @@ public class RobotFull1 extends LinearOpMode {
         wobbleMotor = hardwareMap.get(DcMotor.class, "wobbleMotor");
         wobbleServo = hardwareMap.get(Servo.class, "wobbleServo");
 
+        //Declare Directions and encoders-----------------------------------------------------------
         driveMotorR.setDirection(DcMotor.Direction.FORWARD);
         driveMotorL.setDirection(DcMotor.Direction.REVERSE);
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
@@ -92,68 +93,99 @@ public class RobotFull1 extends LinearOpMode {
 
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        //endregion STOP Declarare Motoare--------------------------------------------------------------------
-
+        //Wait for Start----------------------------------------------------------------------------
         waitForStart();
         runtime.reset();
 
         while (opModeIsActive()) {
 
+            //Drive Train---------------------------------------------------------------------------
             double drive = gamepad1.left_stick_y;
             double turn  =  -gamepad1.right_stick_x;
-            powerDriveR    = Range.clip(drive + turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic) ;
-            powerDriveL   = Range.clip(drive - turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic) ;
+            powerDriveR    = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+            powerDriveL   = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
 
             driveMotorR.setPower(powerDriveR);
             driveMotorL.setPower(powerDriveL);
 
-
+            /*//Wobble Servo--------------------------------------------------------------------------
             if(gamepad1.triangle){
-               wobbleServo.setPosition(isWobbleOff ? 0.3 : 0.0);
-               isWobbleOff = !isWobbleOff;
-               sleep(500);
-            }
-
-            //Wobble motor--------------------------------------------------------------------------
-            wobbleMotor.setPower(gamepad1.dpad_up ? 0.5 : gamepad1.dpad_down ? -0.5 : 0);
-
-            //Shooter motor-------------------------------------------------------------------------
-            shooterMotor.setVelocity(gamepad2.right_bumper ? 3600 : 0);
-
-            //Conveyor motor------------------------------------------------------------------------
-            conveyorMotor.setPower(gamepad2.left_bumper ? 1.0 : gamepad2.square ? -1 : 0);
-
-            //Intake toggle-------------------------------------------------------------------------
-            //Sau ceva de genul, mi-se pare dubioasa structura acestui script
-            sleep((isIntakeOn = gamepad2.cross != isIntakeOn) ? 500 : 0);
-
-            //IntakePower
-            intakePower = isIntakeOn ? 0.9 : 0;
-
-
-            //Nu pot intelege de ce setai puterea in afara if/else-ului anyways?
-            intakeMotor.setPower(intakePower);
-
-            intakeMotor.setPower(gamepad2.circle ? -1 : intakePower);
-
-
-
-            /*if(gamepad2.cross || gamepad2.circle)
-            {
-                if(gamepad2.cross) {
-                    if(isIntakeOn == 1)
-                        isIntakeOn = 0;
-                    else
-                        isIntakeOn = 1;
+                if(isWobbleOff)
+                {
+                    wobbleServo.setPosition(0.3);
+                    isWobbleOff = false;
+                    sleep(500);
                 }
                 else
-                    isIntakeOn = -1;
+                {
+                    wobbleServo.setPosition(0.0);
+                    isWobbleOff = true;
+                    sleep(500);
+                }
             }
-            else
-                isIntakeOn = 0;
 
-            intakeMotor.setPower(isIntakeOn);*/
-            //STOP Intake Motor---------------------------------------------------------------------
+            //Wobble Motor--------------------------------------------------------------------------
+            if(gamepad1.dpad_up)
+                wobbleMotor.setPower(0.5);
+            else if(gamepad1.dpad_down)
+                wobbleMotor.setPower(-0.5);
+            else
+                wobbleMotor.setPower(0);
+*/
+            //Shooter motor------------------------------------------------------------------------
+            if(gamepad2.right_bumper)
+                shooterMotor.setVelocity(1820);
+            else
+                shooterMotor.setPower(0);
+
+            //Wobble
+            //Claw
+            if (gamepad1.right_bumper) {
+                if (isWobbleOff) {
+                    wobbleServo.setPosition(0.3);
+                    isWobbleOff = false;
+                    sleep(500);
+                } else {
+                    wobbleServo.setPosition(0.0);
+                    isWobbleOff = true;
+                    sleep(500);
+                }
+            }
+
+            //Arm
+            if (gamepad1.left_trigger > 0)
+                wobbleMotor.setPower(0.5);
+            else if (gamepad1.right_trigger > 0)
+                wobbleMotor.setPower(-0.5);
+            else
+                wobbleMotor.setPower(0);
+
+            //Conveyor Motor------------------------------------------------------------------------
+            if(gamepad2.left_bumper)
+                conveyorMotor.setPower(1.0);
+            else if(gamepad2.square)
+                conveyorMotor.setPower(-1);
+            else
+                conveyorMotor.setPower(0);
+
+            //Intake Motor--------------------------------------------------------------------------
+            if(gamepad2.cross) {
+                isIntakeOn = !isIntakeOn;
+                sleep(500);
+            }
+
+            if(isIntakeOn)
+                intakePower = 0.9;
+            else
+                intakePower = 0;
+
+            intakeMotor.setPower(intakePower);
+
+            if(gamepad2.circle)
+                intakeMotor.setPower(-1);
+            else
+                intakeMotor.setPower(intakePower);
+            //END Intake Motor----------------------------------------------------------------------
 
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
