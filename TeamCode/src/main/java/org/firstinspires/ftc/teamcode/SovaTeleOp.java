@@ -121,7 +121,7 @@ public class SovaTeleOp extends LinearOpMode {
                 powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) / 2;
                 driveMotorR.setPower(powerDriveR);
                 driveMotorL.setPower(powerDriveL);
-                sleep(1000);
+                sleep(100);
 
                 //after 1 second, the full power is re-established
                 powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
@@ -147,7 +147,7 @@ public class SovaTeleOp extends LinearOpMode {
 
             //Shooter motor-------------------------------------------------------------------------
             if(gamepad2.right_bumper) {
-                shooterMotor.setVelocity(1820);
+                shooterMotor.setVelocity(1790);
             } else {
                 shooterMotor.setPower(0);
             }
@@ -167,9 +167,9 @@ public class SovaTeleOp extends LinearOpMode {
             }
 
               //Arm
-            if (gamepad1.left_trigger > 0) {
+            if (gamepad1.dpad_up) {
                 wobbleMotor.setPower(0.5);
-            } else if (gamepad1.right_trigger > 0) {
+            } else if (gamepad1.dpad_down) {
                 wobbleMotor.setPower(-0.5);
             } else {
                 wobbleMotor.setPower(0);

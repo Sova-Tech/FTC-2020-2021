@@ -29,7 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -40,7 +39,6 @@ import com.qualcomm.robotcore.util.Range;
 
 
 @TeleOp(name="SovaTeleOP(1_Controller)", group="Linear Opmode")
-@Disabled
 public class SovaTeleOP_1_Controller extends LinearOpMode {
 
     /*
@@ -64,11 +62,14 @@ public class SovaTeleOP_1_Controller extends LinearOpMode {
     Servo wobbleServo;
 
     private boolean isIntakeOn = false;
-    private double dirveMotorSpeedBasic = 0.85;
+    final private double driveMotorSpeedBasic = 1;
     private boolean isWobbleOff = false;
     double powerDriveR;
     double powerDriveL;
     double intakePower;
+    double drive;
+    double turn;
+    boolean moving = false;
 
     @Override
     public void runOpMode() {
@@ -101,14 +102,47 @@ public class SovaTeleOP_1_Controller extends LinearOpMode {
         while (opModeIsActive()) {
 
             //Drive Train---------------------------------------------------------------------------
-            double drive = gamepad1.left_stick_y;
-            double turn  =  -gamepad1.right_stick_x;
-            powerDriveR    = Range.clip(drive + turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic) ;
-            powerDriveL   = Range.clip(drive - turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic) ;
+            drive = gamepad1.left_stick_y;
+            turn  =  -gamepad1.right_stick_x;
 
-            driveMotorR.setPower(powerDriveR);
-            driveMotorL.setPower(powerDriveL);
+            /*
+             * This part of code is for starting the forward and backwards motion of the robot
+             * at a slower speed.  The boolean "moving" stands for the state of the robot (moving or not).
+             * Giving this, there are 3 cases: the robot is at rest and it starts driving, the robot it's
+             * moving and continues to drive and the robot is stopping. These cases are created to avoid
+             * a non linear movement while the robot is moving.
+             */
 
+            if(!moving && drive != 0) {
+                moving = true;
+                //start at half of the power for 1 second
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) / 2;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) / 2;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+                sleep(100);
+
+                //after 1 second, the full power is re-established
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+
+            } else if(moving && drive != 0) {
+                //if robot is already moving, assign the full power, according to the stick position, to motors
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+
+            } else if(drive == 0) {
+                //stop the motors and set the state of moving of the robot (moving boolean) to false
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+                moving = false;
+            }
             //Wobble Servo--------------------------------------------------------------------------
             if(gamepad1.triangle){
                 if(isWobbleOff)
@@ -135,7 +169,7 @@ public class SovaTeleOP_1_Controller extends LinearOpMode {
 
             //Shooter motor------------------------------------------------------------------------
             if(gamepad1.right_bumper)
-                shooterMotor.setVelocity(1820);
+                shooterMotor.setVelocity(1790);
             else
                 shooterMotor.setPower(0);
 
