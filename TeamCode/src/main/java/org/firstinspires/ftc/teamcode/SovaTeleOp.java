@@ -68,6 +68,7 @@ public class SovaTeleOp extends LinearOpMode {
     double powerDriveR;
     double powerDriveL;
     double intakePower;
+    double dirveMotorSpeedBasic = 0.8;
 
     @Override
     public void runOpMode() {
@@ -97,95 +98,86 @@ public class SovaTeleOp extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+        //values
+        boolean isWobbleOn = false;
+        int wobbleToggle = 2;
+        int shooterVelocity = 2300;
+
+        //main loop
         while (opModeIsActive()) {
 
-            //Drive Train---------------------------------------------------------------------------
-            double drive = gamepad1.left_stick_y;
-            double turn  =  -gamepad1.right_stick_x;
-            powerDriveR    = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
-            powerDriveL   = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+            //driver
+            //Movement + Turn
+            double drive = 2 * java.lang.Math.asin(-gamepad1.left_stick_y) / Math.PI; //gamepad1.left_stick_y; //accel
+            double turn = 2 * java.lang.Math.asin(-gamepad1.right_stick_x) / Math.PI; //gamepad1.left_stick_y; //accel
+            powerDriveR = Range.clip(drive + turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic);
+            powerDriveL = Range.clip(drive - turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic);
 
             driveMotorR.setPower(powerDriveR);
             driveMotorL.setPower(powerDriveL);
 
-            /*//Wobble Servo--------------------------------------------------------------------------
-            if(gamepad1.triangle){
-                if(isWobbleOff)
+            //Wobble
+            //Claw
+            /*
+            if (gamepad1.square) {
+                wobbleServo.setPosition(0.3 * Math.pow(-1, wobbleToggle));
+                sleep(500);
+            }
+            */
+
+            if(gamepad1.square){
+                if(isWobbleOn)
                 {
                     wobbleServo.setPosition(0.3);
-                    isWobbleOff = false;
+                    isWobbleOn = false;
                     sleep(500);
                 }
                 else
                 {
                     wobbleServo.setPosition(0.0);
-                    isWobbleOff = true;
+                    isWobbleOn = true;
                     sleep(500);
                 }
             }
 
-            //Wobble Motor--------------------------------------------------------------------------
-            if(gamepad1.dpad_up)
-                wobbleMotor.setPower(0.5);
-            else if(gamepad1.dpad_down)
-                wobbleMotor.setPower(-0.5);
-            else
-                wobbleMotor.setPower(0);
-*/
-            //Shooter motor------------------------------------------------------------------------
-            if(gamepad2.right_bumper)
-                shooterMotor.setVelocity(1820);
-            else
-                shooterMotor.setPower(0);
-
-            //Wobble
-            //Claw
-            if (gamepad1.right_bumper) {
-                if (isWobbleOff) {
-                    wobbleServo.setPosition(0.3);
-                    isWobbleOff = false;
-                    sleep(500);
-                } else {
-                    wobbleServo.setPosition(0.0);
-                    isWobbleOff = true;
-                    sleep(500);
-                }
-            }
 
             //Arm
-            if (gamepad1.left_trigger > 0)
-                wobbleMotor.setPower(0.5);
-            else if (gamepad1.right_trigger > 0)
+            if (gamepad1.right_bumper) //e la alegerea voastra daca sa fie cele doua triggere sau trigger/bumper ul din stanga
+                wobbleMotor.setPower(0.5); //recomand ca l2 ul sa ul ridice //voi stiti directia motorului
+            else if (gamepad1.left_bumper) {
                 wobbleMotor.setPower(-0.5);
-            else
+
+                 
+            } else
                 wobbleMotor.setPower(0);
 
-            //Conveyor Motor------------------------------------------------------------------------
-            if(gamepad2.left_bumper)
+
+            //Shooter
+            //intake
+            if (gamepad2.dpad_right)
+                intakeMotor.setPower(1);
+            else if (gamepad2.dpad_left) {
+                intakeMotor.setPower(-1);
+            } else
+                intakeMotor.setPower(0);
+            /*sleep(500)*/ //?
+
+            //server
+            if (gamepad2.right_bumper)
                 conveyorMotor.setPower(1.0);
-            else if(gamepad2.square)
-                conveyorMotor.setPower(-1);
+            else if (gamepad2.left_bumper)
+                conveyorMotor.setPower(-1.0);
             else
                 conveyorMotor.setPower(0);
 
-            //Intake Motor--------------------------------------------------------------------------
-            if(gamepad2.cross) {
-                isIntakeOn = !isIntakeOn;
-                sleep(500);
-            }
-
-            if(isIntakeOn)
-                intakePower = 0.9;
+            //launcher
+            //shooterMotor.setVelocity(gamepad1.right_stick_y * 2100);   //idk what specs our motor has, so better for u to adjust it //id suggest adding a constant to it for more precision, perhaps with an if then for the stick == 0 case
+            if (-gamepad2.right_stick_y == 0)
+                shooterMotor.setVelocity(gamepad1.right_stick_y * 0);   //perhaps with some accelerationshooterMotor.setPower(gamepad2.right_stick_y)   //perhaps with some acceleration
+            else if (-gamepad2.right_stick_y > 0)
+                shooterMotor.setVelocity(gamepad1.right_stick_y * shooterVelocity * 0.2 * 1 + shooterVelocity * 0.2 * 4);
             else
-                intakePower = 0;
-
-            intakeMotor.setPower(intakePower);
-
-            if(gamepad2.circle)
-                intakeMotor.setPower(-1);
-            else
-                intakeMotor.setPower(intakePower);
-            //END Intake Motor----------------------------------------------------------------------
+                shooterMotor.setPower(-gamepad2.right_stick_y);
 
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
