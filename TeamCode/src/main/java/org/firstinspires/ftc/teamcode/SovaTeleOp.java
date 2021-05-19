@@ -62,12 +62,15 @@ public class SovaTeleOp extends LinearOpMode {
     private DcMotor wobbleMotor = null;
     Servo wobbleServo;
 
+    private boolean moving = false;
     private boolean isIntakeOn = false;
-    private double driveMotorSpeedBasic = 1;
+    final private double driveMotorSpeedBasic = 1;
     private boolean isWobbleOff = true;
-    double powerDriveR;
-    double powerDriveL;
-    double intakePower;
+    double powerDriveR = 0;
+    double powerDriveL = 0;
+    double intakePower = 0;
+    private double drive;
+    private double turn;
 
     @Override
     public void runOpMode() {
@@ -100,46 +103,57 @@ public class SovaTeleOp extends LinearOpMode {
         while (opModeIsActive()) {
 
             //Drive Train---------------------------------------------------------------------------
-            double drive = gamepad1.left_stick_y;
-            double turn  =  -gamepad1.right_stick_x;
-            powerDriveR    = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
-            powerDriveL   = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+            drive = gamepad1.left_stick_y;
+            turn  =  -gamepad1.right_stick_x;
 
-            driveMotorR.setPower(powerDriveR);
-            driveMotorL.setPower(powerDriveL);
+            /*
+            * This part of code is for starting the forward and backwards motion of the robot
+            * at a slower speed.  The boolean "moving" stands for the state of the robot (moving or not).
+            * Giving this, there are 3 cases: the robot is at rest and it starts driving, the robot it's
+            * moving and continues to drive and the robot is stopping. These cases are created to avoid
+            * a non linear movement while the robot is moving.
+            */
 
-            /*//Wobble Servo--------------------------------------------------------------------------
-            if(gamepad1.triangle){
-                if(isWobbleOff)
-                {
-                    wobbleServo.setPosition(0.3);
-                    isWobbleOff = false;
-                    sleep(500);
-                }
-                else
-                {
-                    wobbleServo.setPosition(0.0);
-                    isWobbleOff = true;
-                    sleep(500);
-                }
+            if(!moving && drive != 0) {
+                moving = true;
+                //start at half of the power for 1 second
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) / 2;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) / 2;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+                sleep(1000);
+
+                //after 1 second, the full power is re-established
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+
+            } else if(moving && drive != 0) {
+                //if robot is already moving, assign the full power, according to the stick position, to motors
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+
+            } else if(drive == 0) {
+                //stop the motors and set the state of moving of the robot (moving boolean) to false
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+                moving = false;
             }
 
-            //Wobble Motor--------------------------------------------------------------------------
-            if(gamepad1.dpad_up)
-                wobbleMotor.setPower(0.5);
-            else if(gamepad1.dpad_down)
-                wobbleMotor.setPower(-0.5);
-            else
-                wobbleMotor.setPower(0);
-*/
-            //Shooter motor------------------------------------------------------------------------
-            if(gamepad2.right_bumper)
+            //Shooter motor-------------------------------------------------------------------------
+            if(gamepad2.right_bumper) {
                 shooterMotor.setVelocity(1820);
-            else
+            } else {
                 shooterMotor.setPower(0);
+            }
 
-            //Wobble
-            //Claw
+            //Wobble--------------------------------------------------------------------------------
+              //Claw
             if (gamepad1.right_bumper) {
                 if (isWobbleOff) {
                     wobbleServo.setPosition(0.3);
@@ -152,21 +166,23 @@ public class SovaTeleOp extends LinearOpMode {
                 }
             }
 
-            //Arm
-            if (gamepad1.left_trigger > 0)
+              //Arm
+            if (gamepad1.left_trigger > 0) {
                 wobbleMotor.setPower(0.5);
-            else if (gamepad1.right_trigger > 0)
+            } else if (gamepad1.right_trigger > 0) {
                 wobbleMotor.setPower(-0.5);
-            else
+            } else {
                 wobbleMotor.setPower(0);
+            }
 
             //Conveyor Motor------------------------------------------------------------------------
-            if(gamepad2.left_bumper)
+            if(gamepad2.left_bumper) {
                 conveyorMotor.setPower(1.0);
-            else if(gamepad2.square)
+            } else if(gamepad2.square) {
                 conveyorMotor.setPower(-1);
-            else
+            } else {
                 conveyorMotor.setPower(0);
+            }
 
             //Intake Motor--------------------------------------------------------------------------
             if(gamepad2.cross) {
@@ -174,17 +190,19 @@ public class SovaTeleOp extends LinearOpMode {
                 sleep(500);
             }
 
-            if(isIntakeOn)
+            if(isIntakeOn) {
                 intakePower = 0.9;
-            else
+            } else {
                 intakePower = 0;
+            }
 
             intakeMotor.setPower(intakePower);
 
-            if(gamepad2.circle)
+            if(gamepad2.circle) {
                 intakeMotor.setPower(-1);
-            else
+            } else {
                 intakeMotor.setPower(intakePower);
+            }
             //END Intake Motor----------------------------------------------------------------------
 
 
