@@ -62,13 +62,15 @@ public class SovaTeleOp extends LinearOpMode {
     private DcMotor wobbleMotor = null;
     Servo wobbleServo;
 
+    private boolean moving = false;
     private boolean isIntakeOn = false;
-    private double driveMotorSpeedBasic = 1;
+    final private double driveMotorSpeedBasic = 1;
     private boolean isWobbleOff = true;
-    double powerDriveR;
-    double powerDriveL;
-    double intakePower;
-    double dirveMotorSpeedBasic = 0.8;
+    double powerDriveR = 0;
+    double powerDriveL = 0;
+    double intakePower = 0;
+    private double drive;
+    private double turn;
 
     @Override
     public void runOpMode() {
@@ -98,86 +100,110 @@ public class SovaTeleOp extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        //values
-        boolean isWobbleOn = false;
-        int wobbleToggle = 2;
-        int shooterVelocity = 2300;
-
-        //main loop
         while (opModeIsActive()) {
 
-            //driver
-            //Movement + Turn
-            double drive = 2 * java.lang.Math.asin(-gamepad1.left_stick_y) / Math.PI; //gamepad1.left_stick_y; //accel
-            double turn = 2 * java.lang.Math.asin(-gamepad1.right_stick_x) / Math.PI; //gamepad1.left_stick_y; //accel
-            powerDriveR = Range.clip(drive + turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic);
-            powerDriveL = Range.clip(drive - turn, -dirveMotorSpeedBasic, dirveMotorSpeedBasic);
+            //Drive Train---------------------------------------------------------------------------
+            drive = gamepad1.left_stick_y;
+            turn  =  -gamepad1.right_stick_x;
 
-            driveMotorR.setPower(powerDriveR);
-            driveMotorL.setPower(powerDriveL);
-
-            //Wobble
-            //Claw
             /*
-            if (gamepad1.square) {
-                wobbleServo.setPosition(0.3 * Math.pow(-1, wobbleToggle));
-                sleep(500);
-            }
+            * This part of code is for starting the forward and backwards motion of the robot
+            * at a slower speed.  The boolean "moving" stands for the state of the robot (moving or not).
+            * Giving this, there are 3 cases: the robot is at rest and it starts driving, the robot it's
+            * moving and continues to drive and the robot is stopping. These cases are created to avoid
+            * a non linear movement while the robot is moving.
             */
 
-            if(gamepad1.square){
-                if(isWobbleOn)
-                {
+            if(!moving && drive != 0) {
+                moving = true;
+                //start at half of the power for 1 second
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) / 2;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) / 2;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+                sleep(1000);
+
+                //after 1 second, the full power is re-established
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+
+            } else if(moving && drive != 0) {
+                //if robot is already moving, assign the full power, according to the stick position, to motors
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+
+            } else if(drive == 0) {
+                //stop the motors and set the state of moving of the robot (moving boolean) to false
+                powerDriveR  = Range.clip(drive + turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                powerDriveL  = Range.clip(drive - turn, -driveMotorSpeedBasic, driveMotorSpeedBasic) ;
+                driveMotorR.setPower(powerDriveR);
+                driveMotorL.setPower(powerDriveL);
+                moving = false;
+            }
+
+            //Shooter motor-------------------------------------------------------------------------
+            if(gamepad2.right_bumper) {
+                shooterMotor.setVelocity(1820);
+            } else {
+                shooterMotor.setPower(0);
+            }
+
+            //Wobble--------------------------------------------------------------------------------
+              //Claw
+            if (gamepad1.right_bumper) {
+                if (isWobbleOff) {
                     wobbleServo.setPosition(0.3);
-                    isWobbleOn = false;
+                    isWobbleOff = false;
                     sleep(500);
-                }
-                else
-                {
+                } else {
                     wobbleServo.setPosition(0.0);
-                    isWobbleOn = true;
+                    isWobbleOff = true;
                     sleep(500);
                 }
             }
 
-
-            //Arm
-            if (gamepad1.right_bumper) //e la alegerea voastra daca sa fie cele doua triggere sau trigger/bumper ul din stanga
-                wobbleMotor.setPower(0.5); //recomand ca l2 ul sa ul ridice //voi stiti directia motorului
-            else if (gamepad1.left_bumper) {
+              //Arm
+            if (gamepad1.left_trigger > 0) {
+                wobbleMotor.setPower(0.5);
+            } else if (gamepad1.right_trigger > 0) {
                 wobbleMotor.setPower(-0.5);
-
-                 
-            } else
+            } else {
                 wobbleMotor.setPower(0);
+            }
 
-
-            //Shooter
-            //intake
-            if (gamepad2.dpad_right)
-                intakeMotor.setPower(1);
-            else if (gamepad2.dpad_left) {
-                intakeMotor.setPower(-1);
-            } else
-                intakeMotor.setPower(0);
-            /*sleep(500)*/ //?
-
-            //server
-            if (gamepad2.right_bumper)
+            //Conveyor Motor------------------------------------------------------------------------
+            if(gamepad2.left_bumper) {
                 conveyorMotor.setPower(1.0);
-            else if (gamepad2.left_bumper)
-                conveyorMotor.setPower(-1.0);
-            else
+            } else if(gamepad2.square) {
+                conveyorMotor.setPower(-1);
+            } else {
                 conveyorMotor.setPower(0);
+            }
 
-            //launcher
-            //shooterMotor.setVelocity(gamepad1.right_stick_y * 2100);   //idk what specs our motor has, so better for u to adjust it //id suggest adding a constant to it for more precision, perhaps with an if then for the stick == 0 case
-            if (-gamepad2.right_stick_y == 0)
-                shooterMotor.setVelocity(gamepad1.right_stick_y * 0);   //perhaps with some accelerationshooterMotor.setPower(gamepad2.right_stick_y)   //perhaps with some acceleration
-            else if (-gamepad2.right_stick_y > 0)
-                shooterMotor.setVelocity(gamepad1.right_stick_y * shooterVelocity * 0.2 * 1 + shooterVelocity * 0.2 * 4);
-            else
-                shooterMotor.setPower(-gamepad2.right_stick_y);
+            //Intake Motor--------------------------------------------------------------------------
+            if(gamepad2.cross) {
+                isIntakeOn = !isIntakeOn;
+                sleep(500);
+            }
+
+            if(isIntakeOn) {
+                intakePower = 0.9;
+            } else {
+                intakePower = 0;
+            }
+
+            intakeMotor.setPower(intakePower);
+
+            if(gamepad2.circle) {
+                intakeMotor.setPower(-1);
+            } else {
+                intakeMotor.setPower(intakePower);
+            }
+            //END Intake Motor----------------------------------------------------------------------
 
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
