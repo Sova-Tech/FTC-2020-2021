@@ -183,6 +183,4 @@ public class ringDetector extends LinearOpMode {
             return input;
         }
     }
-
-
 }
